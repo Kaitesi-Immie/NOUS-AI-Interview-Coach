@@ -8,7 +8,6 @@ import {
   LogOut,
 } from "lucide-react";
 
-// ── CHANGE THIS after Railway deploys ─────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /* ── GLOBAL STYLES ───────────────────────────────────────────────────────── */
@@ -82,8 +81,9 @@ body {
 .nav-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--slate);letter-spacing:.3px}
 .nav-name span{color:var(--gold);font-style:italic}
 .nav-links{display:flex;gap:32px}
-.nav-link{font-size:13px;font-weight:500;color:var(--slate-m);cursor:pointer;transition:color .2s;background:none;border:none;font-family:'Jost',sans-serif}
+.nav-link{font-size:13px;font-weight:500;color:var(--slate-m);cursor:pointer;transition:color .2s;background:none;border:none;font-family:'Jost',sans-serif;padding:4px 0}
 .nav-link:hover{color:var(--slate)}
+.nav-link.active{color:var(--slate);font-weight:600;border-bottom:2px solid var(--gold)}
 .nav-ctas{display:flex;gap:10px;align-items:center}
 
 /* HERO */
@@ -340,8 +340,6 @@ body {
 .chip-row{display:flex;gap:7px;margin-top:10px}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--cream-d);background:transparent;font-size:12px;color:var(--slate-m);cursor:pointer;font-family:'Jost',sans-serif;transition:all .15s}
 .chip:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-p)}
-
-/* ERROR BANNER */
 .err-banner{background:#FEE;border:1px solid #F5C6C6;border-radius:var(--r);padding:10px 14px;font-size:13px;color:#C0392B;margin-bottom:12px}
 
 /* SCORECARD */
@@ -389,9 +387,9 @@ const FEATS  = [
   { Icon:Download,  title:"Export Sessions",        desc:"Download your full transcript to review or share with a mentor." },
 ];
 const STEPS = [
-  { n:"01", Icon:User,           title:"Create your profile",  desc:"Sign up in seconds. Tell us what role you're targeting and your experience level." },
-  { n:"02", Icon:Brain,          title:"Choose your style",    desc:"Pick from five distinct AI coaching techniques. Each gives you a different interview experience." },
-  { n:"03", Icon:MessageSquare,  title:"Practice & improve",   desc:"Get real-time feedback, hints, and a scorecard at the end of every session." },
+  { n:"01", Icon:User,          title:"Create your profile", desc:"Sign up in seconds. Tell us what role you're targeting and your experience level." },
+  { n:"02", Icon:Brain,         title:"Choose your style",   desc:"Pick from five distinct AI coaching techniques. Each gives you a different interview experience." },
+  { n:"03", Icon:MessageSquare, title:"Practice & improve",  desc:"Get real-time feedback, hints, and a scorecard at the end of every session." },
 ];
 const TESTIMONIALS = [
   { text:"NOUS AI gave me the confidence I'd been missing. The structured feedback after each answer helped me identify exactly where I was losing marks.", name:"Amara O.", role:"Software Engineer · Google", init:"AO" },
@@ -406,41 +404,68 @@ const time = () => new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:
 
 /* ── ROOT ────────────────────────────────────────────────────────────────── */
 export default function NousAI() {
-  const [screen, setScreen]   = useState("landing");
+  const [screen,  setScreen]  = useState("landing");
   const [appView, setAppView] = useState("context");
-  const [user, setUser]       = useState(null);
+  const [user,    setUser]    = useState(null);
 
   return (
     <>
       <style>{CSS}</style>
-      {screen==="landing" && <Landing go={setScreen}/>}
-      {screen==="login"   && <Login   go={setScreen} setUser={setUser}/>}
-      {screen==="signup"  && <Signup  go={setScreen} setUser={setUser}/>}
-      {screen==="app"     && <App     go={setScreen} user={user} view={appView} setView={setAppView}/>}
+      {screen==="landing" && <Landing  go={setScreen}/>}
+      {screen==="login"   && <Login    go={setScreen} setUser={setUser}/>}
+      {screen==="signup"  && <Signup   go={setScreen} setUser={setUser}/>}
+      {screen==="app"     && <App      go={setScreen} user={user} view={appView} setView={setAppView}/>}
     </>
   );
 }
 
 /* ── LANDING ─────────────────────────────────────────────────────────────── */
 function Landing({ go }) {
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled]     = useState(false);
+  const [activeSection, setActive]  = useState("");
+  const wrapRef  = useRef(null);
+  const howRef   = useRef(null);
+  const featRef  = useRef(null);
+  const testiRef = useRef(null);
+
+  // Use the wrapper div's own scroll event — works in browser AND iframe
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", h);
-    return () => window.removeEventListener("scroll", h);
+    const el = wrapRef.current;
+    if (!el) return;
+    const h = () => setScrolled(el.scrollTop > 20);
+    el.addEventListener("scroll", h);
+    return () => el.removeEventListener("scroll", h);
   }, []);
 
+  function scrollTo(ref, name) {
+    setActive(name);
+    ref.current?.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
   return (
-    <div>
+    <div ref={wrapRef} style={{height:"100vh", overflowY:"auto"}}>
+      {/* NAV */}
       <nav className="land-nav" style={scrolled?{boxShadow:"0 2px 20px rgba(0,0,0,.08)"}:{}}>
         <div className="nav-brand">
           <div className="nav-logo"><Brain size={18}/></div>
           <div className="nav-name">NOUS <span>AI</span></div>
         </div>
         <div className="nav-links">
-          <button className="nav-link">How it works</button>
-          <button className="nav-link">Features</button>
-          <button className="nav-link">Testimonials</button>
+          <button
+            className={`nav-link ${activeSection==="how"?"active":""}`}
+            onClick={()=>scrollTo(howRef,"how")}>
+            How it works
+          </button>
+          <button
+            className={`nav-link ${activeSection==="feat"?"active":""}`}
+            onClick={()=>scrollTo(featRef,"feat")}>
+            Features
+          </button>
+          <button
+            className={`nav-link ${activeSection==="testi"?"active":""}`}
+            onClick={()=>scrollTo(testiRef,"testi")}>
+            Testimonials
+          </button>
         </div>
         <div className="nav-ctas">
           <button className="btn btn-ghost btn-sm" onClick={()=>go("login")}>Sign in</button>
@@ -448,6 +473,7 @@ function Landing({ go }) {
         </div>
       </nav>
 
+      {/* HERO */}
       <div className="hero-wrap">
         <div className="hero-orbs">
           <div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/>
@@ -463,12 +489,17 @@ function Landing({ go }) {
           The intelligent interview coach that adapts to <strong>your role, your level, your goals</strong> — and tells you exactly how to improve.
         </p>
         <div className="hero-ctas anim-fade-up d3">
-          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>Start practising free <ArrowRight size={16}/></button>
+          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>
+            Start practising free <ArrowRight size={16}/>
+          </button>
           <button className="btn btn-ghost btn-lg" onClick={()=>go("login")}>Sign in</button>
         </div>
-        <div className="hero-scroll"><div className="scroll-line"/>SCROLL</div>
+        <div className="hero-scroll" onClick={()=>scrollTo(howRef,"how")}>
+          <div className="scroll-line"/>SCROLL
+        </div>
       </div>
 
+      {/* STATS */}
       <div className="stats-strip">
         {[["10,000+","Interviews practised"],["94%","Users feel more confident"],["5","Coaching techniques"],["4.9★","Average rating"]].map(([v,l])=>(
           <div key={l} className="strip-stat anim-fade-up">
@@ -478,7 +509,8 @@ function Landing({ go }) {
         ))}
       </div>
 
-      <div style={{background:"var(--cream)"}}>
+      {/* HOW IT WORKS */}
+      <div ref={howRef} style={{background:"var(--cream)",scrollMarginTop:"68px"}}>
         <div className="section">
           <div className="section-eyebrow">How it works</div>
           <h2 className="section-h2">Three steps to interview confidence</h2>
@@ -496,7 +528,8 @@ function Landing({ go }) {
         </div>
       </div>
 
-      <div className="features-bg">
+      {/* FEATURES */}
+      <div ref={featRef} className="features-bg" style={{scrollMarginTop:"68px"}}>
         <div className="feat-inner">
           <div className="section-eyebrow" style={{color:"var(--gold)"}}>Features</div>
           <h2 className="section-h2" style={{color:"var(--white)"}}>Everything you need to prepare</h2>
@@ -513,7 +546,8 @@ function Landing({ go }) {
         </div>
       </div>
 
-      <div style={{background:"var(--cream)"}}>
+      {/* TESTIMONIALS */}
+      <div ref={testiRef} style={{background:"var(--cream)",scrollMarginTop:"68px"}}>
         <div className="section">
           <div className="section-eyebrow">Testimonials</div>
           <h2 className="section-h2">From candidates who landed the role</h2>
@@ -533,15 +567,19 @@ function Landing({ go }) {
         </div>
       </div>
 
+      {/* CTA */}
       <div className="cta-band">
         <h2 className="cta-h2 anim-fade-up">Ready to ace your next interview?</h2>
         <p className="cta-sub anim-fade-up d1">Join thousands of candidates who practise smarter, not harder.</p>
         <div className="cta-btns anim-fade-up d2">
-          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>Get started — it's free <ArrowRight size={16}/></button>
+          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>
+            Get started — it's free <ArrowRight size={16}/>
+          </button>
           <button className="btn btn-ghost-w btn-lg" onClick={()=>go("login")}>Sign in</button>
         </div>
       </div>
 
+      {/* FOOTER */}
       <div className="footer">
         <div className="footer-brand">
           <div className="nav-logo"><Brain size={16}/></div>
@@ -555,14 +593,14 @@ function Landing({ go }) {
 
 /* ── LOGIN ───────────────────────────────────────────────────────────────── */
 function Login({ go, setUser }) {
-  const [email, setEmail]     = useState("");
-  const [pass,  setPass]      = useState("");
-  const [show,  setShow]      = useState(false);
+  const [email,   setEmail]   = useState("");
+  const [pass,    setPass]    = useState("");
+  const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const [err,   setErr]       = useState("");
+  const [err,     setErr]     = useState("");
 
   function submit() {
-    if (!email || !pass) { setErr("Please fill in all fields."); return; }
+    if (!email||!pass) { setErr("Please fill in all fields."); return; }
     setErr(""); setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -601,7 +639,8 @@ function Login({ go, setUser }) {
             <div className="form-input-wrap">
               <div className="form-input-icon"><Mail size={15}/></div>
               <input className="form-input" type="email" placeholder="you@example.com"
-                value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
+                value={email} onChange={e=>setEmail(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&submit()}/>
             </div>
           </div>
           <div className="form-group">
@@ -609,17 +648,18 @@ function Login({ go, setUser }) {
             <div className="form-input-wrap">
               <div className="form-input-icon"><Lock size={15}/></div>
               <input className="form-input" type={show?"text":"password"} placeholder="••••••••"
-                value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
-              <button className="eye-btn" onClick={()=>setShow(s=>!s)}>{show?<EyeOff size={15}/>:<Eye size={15}/>}</button>
+                value={pass} onChange={e=>setPass(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&submit()}/>
+              <button className="eye-btn" onClick={()=>setShow(s=>!s)}>
+                {show?<EyeOff size={15}/>:<Eye size={15}/>}
+              </button>
             </div>
           </div>
           <button className="submit-btn" onClick={submit} disabled={loading}>
             {loading?<><div className="spinner"/>Signing in…</>:<>Sign in <ArrowRight size={15}/></>}
           </button>
           <div className="divider"><div className="div-line"/><span className="div-txt">or continue with</span><div className="div-line"/></div>
-          <button className="social-btn">
-            <GoogleIcon/> Continue with Google
-          </button>
+          <button className="social-btn"><GoogleIcon/> Continue with Google</button>
           <div className="terms-note">By signing in you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.</div>
         </div>
       </div>
@@ -629,12 +669,12 @@ function Login({ go, setUser }) {
 
 /* ── SIGNUP ──────────────────────────────────────────────────────────────── */
 function Signup({ go, setUser }) {
-  const [name,  setName]      = useState("");
-  const [email, setEmail]     = useState("");
-  const [pass,  setPass]      = useState("");
-  const [show,  setShow]      = useState(false);
+  const [name,    setName]    = useState("");
+  const [email,   setEmail]   = useState("");
+  const [pass,    setPass]    = useState("");
+  const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const [err,   setErr]       = useState("");
+  const [err,     setErr]     = useState("");
 
   function submit() {
     if (!name||!email||!pass) { setErr("Please fill in all fields."); return; }
@@ -678,14 +718,16 @@ function Signup({ go, setUser }) {
             <label className="form-label">Full name</label>
             <div className="form-input-wrap">
               <div className="form-input-icon"><User size={15}/></div>
-              <input className="form-input" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)}/>
+              <input className="form-input" placeholder="Your name"
+                value={name} onChange={e=>setName(e.target.value)}/>
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Email address</label>
             <div className="form-input-wrap">
               <div className="form-input-icon"><Mail size={15}/></div>
-              <input className="form-input" type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/>
+              <input className="form-input" type="email" placeholder="you@example.com"
+                value={email} onChange={e=>setEmail(e.target.value)}/>
             </div>
           </div>
           <div className="form-group">
@@ -693,8 +735,11 @@ function Signup({ go, setUser }) {
             <div className="form-input-wrap">
               <div className="form-input-icon"><Lock size={15}/></div>
               <input className="form-input" type={show?"text":"password"} placeholder="Min. 8 characters"
-                value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
-              <button className="eye-btn" onClick={()=>setShow(s=>!s)}>{show?<EyeOff size={15}/>:<Eye size={15}/>}</button>
+                value={pass} onChange={e=>setPass(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&submit()}/>
+              <button className="eye-btn" onClick={()=>setShow(s=>!s)}>
+                {show?<EyeOff size={15}/>:<Eye size={15}/>}
+              </button>
             </div>
           </div>
           <button className="submit-btn" onClick={submit} disabled={loading}>
@@ -736,7 +781,7 @@ function App({ go, user, view, setView }) {
   useEffect(() => {
     if (view==="interview") {
       startTime.current = Date.now();
-      const t = setInterval(()=>setElapsed(Math.floor((Date.now()-startTime.current)/1000)), 1000);
+      const t = setInterval(()=>setElapsed(Math.floor((Date.now()-startTime.current)/1000)),1000);
       return ()=>clearInterval(t);
     }
   }, [view]);
@@ -752,15 +797,10 @@ function App({ go, user, view, setView }) {
       const res = await fetch(`${API_BASE}/chat`, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          api_key: apiKey,
-          messages: [],
-          context: ctx,
-          mode, level, technique: tech,
-        }),
+        body: JSON.stringify({ api_key:apiKey, messages:[], context:ctx, mode, level, technique:tech }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "API error");
+      if (!res.ok) throw new Error(data.detail||"API error");
       setMsgs([{role:"assistant", content:data.message, time:time(), tags:[]}]);
       setTotalCost(c=>c+data.cost);
       setTotalTok(t=>t+data.tokens.input+data.tokens.output);
@@ -785,16 +825,16 @@ function App({ go, user, view, setView }) {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          api_key: apiKey,
+          api_key:apiKey,
           messages: newMsgs.map(m=>({role:m.role, content:m.content})),
-          context: ctx, mode, level, technique: tech,
+          context:ctx, mode, level, technique:tech,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "API error");
-      const content  = data.message;
-      const hasGood  = content.toLowerCase().includes("strength") || content.toLowerCase().includes("strong") || content.toLowerCase().includes("well");
-      const hasImp   = content.toLowerCase().includes("improve") || content.toLowerCase().includes("consider") || content.toLowerCase().includes("nuance");
+      if (!res.ok) throw new Error(data.detail||"API error");
+      const content = data.message;
+      const hasGood = /strength|strong|well/i.test(content);
+      const hasImp  = /improve|consider|nuance/i.test(content);
       setMsgs(p=>[...p,{role:"assistant",content,time:time(),tags:[...(hasGood?["good"]:[]),...(hasImp?["improve"]:[])]}]);
       setTotalCost(c=>c+data.cost);
       setTotalTok(t=>t+data.tokens.input+data.tokens.output);
@@ -814,7 +854,7 @@ function App({ go, user, view, setView }) {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          api_key: apiKey,
+          api_key:apiKey,
           messages: msgs.map(m=>({role:m.role,content:m.content})),
           mode, level,
         }),
@@ -830,11 +870,20 @@ function App({ go, user, view, setView }) {
 
   function exportChat() {
     const txt = msgs.map(m=>`[${m.role.toUpperCase()}] ${m.time}\n${m.content}`).join("\n\n---\n\n");
-    const b = new Blob([txt], {type:"text/plain"});
+    const b = new Blob([txt],{type:"text/plain"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(b);
     a.download = `nous-interview-${Date.now()}.txt`;
     a.click();
+  }
+
+  function resetSession() {
+    setView("context");
+    setMsgs([]);
+    setTotalCost(0);
+    setTotalTok(0);
+    setElapsed(0);
+    setApiErr("");
   }
 
   function onKey(e) { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} }
@@ -842,7 +891,7 @@ function App({ go, user, view, setView }) {
 
   return (
     <div className="app-shell">
-      {/* SIDEBAR */}
+      {/* ── SIDEBAR ── */}
       <aside className="sb">
         <div className="sb-brand">
           <div className="sb-eyebrow">NOUS AI</div>
@@ -889,10 +938,22 @@ function App({ go, user, view, setView }) {
           <div className="sb-sec">
             <div className="sb-lbl"><BarChart2 size={10}/> Session</div>
             <div className="stat-grid">
-              <div className="stat-box"><div className="stat-val">{qCount}</div><div className="stat-lbl"><Hash size={9}/>Qs</div></div>
-              <div className="stat-box"><div className="stat-val">{fmtTime(elapsed)}</div><div className="stat-lbl"><Clock size={9}/>Time</div></div>
-              <div className="stat-box"><div className="stat-val">{totalTok>999?`${(totalTok/1000).toFixed(1)}k`:totalTok}</div><div className="stat-lbl"><Zap size={9}/>Tokens</div></div>
-              <div className="stat-box"><div className="stat-val">${totalCost.toFixed(4)}</div><div className="stat-lbl"><DollarSign size={9}/>Cost</div></div>
+              <div className="stat-box">
+                <div className="stat-val">{qCount}</div>
+                <div className="stat-lbl"><Hash size={9}/>Qs</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{fmtTime(elapsed)}</div>
+                <div className="stat-lbl"><Clock size={9}/>Time</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">{totalTok>999?`${(totalTok/1000).toFixed(1)}k`:totalTok}</div>
+                <div className="stat-lbl"><Zap size={9}/>Tokens</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">${totalCost.toFixed(4)}</div>
+                <div className="stat-lbl"><DollarSign size={9}/>Cost</div>
+              </div>
             </div>
             <div className="prog-wrap">
               <div className="prog-head">
@@ -921,7 +982,7 @@ function App({ go, user, view, setView }) {
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ── MAIN ── */}
       <main className="main">
         <div className="topbar">
           <div className="topbar-l">
@@ -935,11 +996,11 @@ function App({ go, user, view, setView }) {
             {view==="interview"&&<>
               <button className="btn btn-ghost btn-sm" onClick={fetchScorecard}><BarChart2 size={13}/>Scorecard</button>
               <button className="btn btn-ghost btn-sm" onClick={exportChat}><Download size={13}/>Export</button>
-              <button className="btn btn-ghost btn-sm" onClick={()=>{setView("context");setMsgs([]);setTotalCost(0);setTotalTok(0);setElapsed(0);}}>
-                <RotateCcw size={13}/>New Session
-              </button>
+              <button className="btn btn-ghost btn-sm" onClick={resetSession}><RotateCcw size={13}/>New Session</button>
             </>}
-            <button className="btn btn-ghost btn-sm" onClick={()=>go("landing")} title="Sign out"><LogOut size={13}/></button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>go("landing")} title="Sign out">
+              <LogOut size={13}/>
+            </button>
           </div>
         </div>
 
@@ -953,9 +1014,9 @@ function App({ go, user, view, setView }) {
             </div>
             <div className="feat-g3">
               {[
-                {Icon:Brain,    title:"5 Coaching Styles", desc:"Pick the technique that fits how you learn best."},
-                {Icon:Zap,      title:"Inline Feedback",   desc:"Strengths and growth tags on every AI response."},
-                {Icon:BarChart2,title:"Scorecard",         desc:"Competency breakdown at the end of every session."},
+                {Icon:Brain,     title:"5 Coaching Styles", desc:"Pick the technique that fits how you learn best."},
+                {Icon:Zap,       title:"Inline Feedback",   desc:"Strengths and growth tags on every AI response."},
+                {Icon:BarChart2, title:"Scorecard",         desc:"Competency breakdown at the end of every session."},
               ].map(({Icon,title,desc},i)=>(
                 <div key={title} className={`fc anim-fade-up d${i+2}`}>
                   <div className="fc-icon"><Icon size={17}/></div>
@@ -979,7 +1040,11 @@ function App({ go, user, view, setView }) {
                   Start Interview <ArrowRight size={14}/>
                 </button>
               </div>
-              {!apiKey&&<p style={{fontSize:12,color:"var(--gold)",marginTop:8}}>⚠ Enter your OpenAI API key in the sidebar to begin.</p>}
+              {!apiKey&&(
+                <p style={{fontSize:12,color:"var(--gold)",marginTop:8}}>
+                  ⚠ Enter your OpenAI API key in the sidebar to begin.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -1035,21 +1100,29 @@ function App({ go, user, view, setView }) {
               <div className="inp-wrap">
                 <textarea className="chat-inp" rows={1}
                   placeholder="Type your answer… (Enter to send, Shift+Enter for new line)"
-                  value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={onKey}
-                  disabled={typing}/>
-                <button className="send-btn" onClick={send} disabled={typing||!inp.trim()}><Send size={15}/></button>
+                  value={inp} onChange={e=>setInp(e.target.value)}
+                  onKeyDown={onKey} disabled={typing}/>
+                <button className="send-btn" onClick={send} disabled={typing||!inp.trim()}>
+                  <Send size={15}/>
+                </button>
               </div>
               <div className="chip-row">
-                <button className="chip" onClick={()=>setInp("Can you give me a hint?")}><Lightbulb size={12}/>Give me a hint</button>
-                <button className="chip" onClick={()=>{ setInp("Please skip to the next question."); }}><SkipForward size={12}/>Skip question</button>
-                <button className="chip" onClick={()=>setInp("Can you rephrase that question?")}><RefreshCw size={12}/>Rephrase</button>
+                <button className="chip" onClick={()=>setInp("Can you give me a hint?")}>
+                  <Lightbulb size={12}/>Give me a hint
+                </button>
+                <button className="chip" onClick={()=>setInp("Please skip to the next question.")}>
+                  <SkipForward size={12}/>Skip question
+                </button>
+                <button className="chip" onClick={()=>setInp("Can you rephrase that question?")}>
+                  <RefreshCw size={12}/>Rephrase
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* SCORECARD MODAL */}
+      {/* ── SCORECARD MODAL ── */}
       {showScore&&(
         <div className="backdrop" onClick={()=>setShowScore(false)}>
           <div className="scorecard" onClick={e=>e.stopPropagation()}>
@@ -1095,7 +1168,7 @@ function App({ go, user, view, setView }) {
                 <div className="sc-actions">
                   <button className="btn btn-ghost" onClick={()=>setShowScore(false)}><X size={13}/>Close</button>
                   <button className="btn btn-ghost" onClick={exportChat}><Download size={13}/>Export</button>
-                  <button className="btn btn-gold" onClick={()=>{setShowScore(false);setView("context");setMsgs([]);setTotalCost(0);setTotalTok(0);setElapsed(0);}}>
+                  <button className="btn btn-gold" onClick={()=>{setShowScore(false);resetSession();}}>
                     <RotateCcw size={13}/>New Session
                   </button>
                 </div>
