@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+openai
+python-dotenv
+authlib
+httpx
+python-jose[cryptography]
+python-multipart
+starlette
+itsdangerous
