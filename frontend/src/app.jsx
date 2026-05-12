@@ -4,71 +4,58 @@ import {
   BarChart2, Zap, Layout, MessageSquare,
   CheckCircle, TrendingUp, Clock, Hash, DollarSign,
   RotateCcw, Download, Send, Lightbulb, SkipForward,
-  RefreshCw, X, Key, Circle, Star, Shield, Target,
+  RefreshCw, X, Star, Shield, Target,
   LogOut,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+/* ── TOKEN STORAGE ──────────────────────────────────────────────────────── */
+const TOKEN_KEY = "nous_jwt";
+function saveToken(t)  { localStorage.setItem(TOKEN_KEY, t); }
+function loadToken()   { return localStorage.getItem(TOKEN_KEY); }
+function clearToken()  { localStorage.removeItem(TOKEN_KEY); }
+function authHeaders() {
+  const t = loadToken();
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
 /* ── GLOBAL STYLES ───────────────────────────────────────────────────────── */
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&family=Jost+Mono:wght@400;500&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --lav:      #C8CCE0;
-  --lav-d:    #9AA0BF;
-  --lav-x:    #7880A8;
-  --slate:    #3D3F5C;
-  --slate-m:  #5C5F80;
-  --slate-l:  #8386A8;
-  --cream:    #F5F3EE;
-  --cream-d:  #EAE7E0;
-  --cream-x:  #DDD9CF;
-  --gold:     #B8A96A;
-  --gold-l:   #D4C88A;
-  --gold-p:   #F2EDD8;
-  --white:    #FFFFFF;
-  --ok:       #4A7C5F;
-  --ok-bg:    rgba(74,124,95,0.1);
-  --warn-bg:  #FBF6EC;
-  --warn-txt: #7A5C20;
-  --r:        5px;
-  --r-lg:     16px;
-  --r-xl:     24px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --lav:#C8CCE0;--lav-d:#9AA0BF;--lav-x:#7880A8;
+  --slate:#3D3F5C;--slate-m:#5C5F80;--slate-l:#8386A8;
+  --cream:#F5F3EE;--cream-d:#EAE7E0;--cream-x:#DDD9CF;
+  --gold:#B8A96A;--gold-l:#D4C88A;--gold-p:#F2EDD8;
+  --white:#FFFFFF;--ok:#4A7C5F;--ok-bg:rgba(74,124,95,0.1);
+  --warn-bg:#FBF6EC;--warn-txt:#7A5C20;
+  --r:5px;--r-lg:16px;--r-xl:24px;
 }
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--slate);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Jost', sans-serif;
-  background: var(--cream);
-  color: var(--slate);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+@keyframes fadeUp  {from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes scaleIn {from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes slideR  {from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float   {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes blink   {0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes shimmer {from{background-position:200% center}to{background-position:-200% center}}
+@keyframes spin    {from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes tdot    {0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes orb1    {0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.08)}}
+@keyframes orb2    {0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20px,30px) scale(1.05)}}
+@keyframes pulse   {0%,100%{box-shadow:0 0 0 0 rgba(184,169,106,.4)}70%{box-shadow:0 0 0 10px rgba(184,169,106,0)}}
 
-@keyframes fadeUp   { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
-@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
-@keyframes scaleIn  { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
-@keyframes slideR   { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
-@keyframes float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:.3} }
-@keyframes shimmer  { from{background-position:200% center} to{background-position:-200% center} }
-@keyframes spin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-@keyframes tdot     { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-5px);opacity:1} }
-@keyframes orb1     { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-20px) scale(1.08)} }
-@keyframes orb2     { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-20px,30px) scale(1.05)} }
-@keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(184,169,106,.4)} 70%{box-shadow:0 0 0 10px rgba(184,169,106,0)} }
-
-.anim-fade-up  { animation: fadeUp  .6s ease both; }
-.anim-fade-in  { animation: fadeIn  .4s ease both; }
-.anim-scale-in { animation: scaleIn .3s ease both; }
-.anim-slide-r  { animation: slideR  .5s ease both; }
-
-.d1{animation-delay:.1s!important} .d2{animation-delay:.2s!important}
-.d3{animation-delay:.3s!important} .d4{animation-delay:.4s!important}
-.d5{animation-delay:.5s!important} .d6{animation-delay:.6s!important}
+.anim-fade-up {animation:fadeUp  .6s ease both}
+.anim-fade-in {animation:fadeIn  .4s ease both}
+.anim-scale-in{animation:scaleIn .3s ease both}
+.anim-slide-r {animation:slideR  .5s ease both}
+.d1{animation-delay:.1s!important}.d2{animation-delay:.2s!important}
+.d3{animation-delay:.3s!important}.d4{animation-delay:.4s!important}
+.d5{animation-delay:.5s!important}.d6{animation-delay:.6s!important}
 
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -150,7 +137,7 @@ body {
 .testi-name{font-size:13px;font-weight:600;color:var(--slate)}
 .testi-role{font-size:11px;color:var(--slate-l);margin-top:1px}
 
-/* CTA */
+/* CTA BAND */
 .cta-band{background:linear-gradient(135deg,var(--slate) 0%,#2a2c45 100%);padding:80px 60px;text-align:center;position:relative;overflow:hidden}
 .cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(184,169,106,.15) 0%,transparent 60%)}
 .cta-h2{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:500;color:var(--white);margin-bottom:14px;position:relative}
@@ -170,8 +157,6 @@ body {
 .btn-ghost:hover{background:var(--cream);color:var(--slate);border-color:var(--lav-d)}
 .btn-ghost-w{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.25)}
 .btn-ghost-w:hover{background:rgba(255,255,255,.08)}
-.btn-dark{background:var(--slate);color:var(--white)}
-.btn-dark:hover{background:var(--slate-m);transform:translateY(-1px)}
 .btn-sm{padding:8px 16px;font-size:12px}
 .btn-lg{padding:14px 32px;font-size:15px;font-weight:600}
 
@@ -191,12 +176,14 @@ body {
 .auth-bullets{display:flex;flex-direction:column;gap:12px}
 .auth-bullet{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--lav)}
 .auth-bullet-icon{width:24px;height:24px;border-radius:50%;background:rgba(184,169,106,.2);color:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.auth-right{width:480px;min-width:480px;display:flex;flex-direction:column;justify-content:center;padding:60px 52px;background:var(--cream)}
-.auth-form-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--slate);margin-bottom:6px}
-.auth-form-sub{font-size:14px;color:var(--slate-m);margin-bottom:36px}
+.auth-right{width:500px;min-width:500px;display:flex;flex-direction:column;justify-content:center;padding:60px 52px;background:var(--cream);overflow-y:auto}
+.auth-form-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--slate);margin-bottom:4px}
+.auth-form-sub{font-size:14px;color:var(--slate-m);margin-bottom:24px}
 .auth-form-sub span{color:var(--gold);cursor:pointer;font-weight:500}
 .auth-form-sub span:hover{text-decoration:underline}
-.form-group{margin-bottom:18px}
+
+/* FORM ELEMENTS */
+.form-group{margin-bottom:16px}
 .form-label{display:block;font-size:12px;font-weight:500;color:var(--slate);margin-bottom:7px;letter-spacing:.3px}
 .form-input-wrap{position:relative}
 .form-input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--lav-d);pointer-events:none}
@@ -205,17 +192,24 @@ body {
 .form-input::placeholder{color:var(--lav)}
 .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--lav-d);padding:2px;transition:color .2s}
 .eye-btn:hover{color:var(--slate)}
-.divider{display:flex;align-items:center;gap:12px;margin:22px 0}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0}
 .div-line{flex:1;height:1px;background:var(--cream-d)}
 .div-txt{font-size:12px;color:var(--slate-l)}
-.social-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border-radius:var(--r);border:1.5px solid var(--cream-d);background:var(--white);font-size:13px;font-weight:500;color:var(--slate);cursor:pointer;transition:all .2s;font-family:'Jost',sans-serif;margin-bottom:10px}
-.social-btn:hover{border-color:var(--lav-d);background:var(--cream)}
-.submit-btn{width:100%;padding:13px;background:var(--slate);color:var(--white);border:none;border-radius:var(--r);font-family:'Jost',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.social-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:var(--r);border:1.5px solid var(--cream-d);background:var(--white);font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;transition:all .2s;font-family:'Jost',sans-serif}
+.social-btn:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(184,169,106,.15);transform:translateY(-1px)}
+.social-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.submit-btn{width:100%;padding:13px;background:var(--slate);color:var(--white);border:none;border-radius:var(--r);font-family:'Jost',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
 .submit-btn:hover{background:var(--gold);transform:translateY(-1px);box-shadow:0 4px 16px rgba(184,169,106,.3)}
 .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:var(--white);animation:spin .7s linear infinite}
-.terms-note{font-size:12px;color:var(--slate-l);text-align:center;margin-top:20px;line-height:1.5}
+.terms-note{font-size:12px;color:var(--slate-l);text-align:center;margin-top:18px;line-height:1.5}
 .terms-note span{color:var(--slate-m);cursor:pointer;text-decoration:underline}
+.err-banner{background:#FEE;border:1px solid #F5C6C6;border-radius:var(--r);padding:10px 14px;font-size:13px;color:#C0392B;margin-bottom:14px}
+
+/* LOADING SCREEN */
+.loading-screen{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
+.loading-screen .big-spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(184,169,106,.25);border-top-color:var(--gold);animation:spin .7s linear infinite}
+.loading-screen p{font-size:14px;color:var(--slate-m)}
 
 /* APP SHELL */
 .app-shell{display:flex;height:100vh;overflow:hidden}
@@ -226,9 +220,6 @@ body {
 .sb-title span{color:var(--gold);font-style:italic}
 .sb-sec{padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sb-lbl{font-family:'Jost Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--slate-l);margin-bottom:10px;display:flex;align-items:center;gap:5px}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;margin-top:8px}
-.pill.ok{background:rgba(74,124,95,.2);color:#7EC8A0}
-.pill.no{background:rgba(184,169,106,.15);color:var(--gold-l)}
 .tcards{display:flex;flex-direction:column;gap:4px}
 .tcard{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .15s}
 .tcard:hover{background:rgba(255,255,255,.04);border-color:rgba(184,169,106,.25)}
@@ -253,7 +244,9 @@ body {
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:2px;transition:width .6s ease}
 .sb-foot{margin-top:auto;padding:14px 22px;border-top:1px solid rgba(255,255,255,.06)}
 .sb-user{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;border-radius:var(--r);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
-.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--lav),var(--slate-m));display:flex;align-items:center;justify-content:center;color:var(--white);font-size:13px;font-weight:600;flex-shrink:0}
+.sb-av{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-av img{width:100%;height:100%;object-fit:cover}
+.sb-av-fb{width:100%;height:100%;background:linear-gradient(135deg,var(--lav),var(--slate-m));display:flex;align-items:center;justify-content:center;color:var(--white);font-size:13px;font-weight:600}
 .sb-uname{font-size:13px;font-weight:500;color:var(--white)}
 .sb-uemail{font-size:10px;color:var(--slate-l);margin-top:1px}
 .cost-row{display:flex;align-items:center;justify-content:space-between;background:rgba(184,169,106,.08);border:1px solid rgba(184,169,106,.18);border-radius:var(--r);padding:9px 12px}
@@ -307,12 +300,11 @@ body {
 .q-lbl{font-family:'Jost Mono',monospace;font-size:11px;color:var(--slate-m)}
 .q-dots{display:flex;gap:4px}
 .qdot{width:8px;height:8px;border-radius:50%;background:var(--lav);transition:background .3s}
-.qdot.done{background:var(--gold)}
-.qdot.cur{background:var(--slate)}
+.qdot.done{background:var(--gold)}.qdot.cur{background:var(--slate)}
 .chat{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:22px;background:var(--cream)}
 .mrow{display:flex;gap:12px;max-width:780px;animation:fadeUp .3s ease}
 .mrow.user{align-self:flex-end;flex-direction:row-reverse}
-.mav{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.mav{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px;overflow:hidden}
 .mav.ai{background:var(--slate);color:var(--white)}
 .mav.usr{background:var(--gold-p);border:1px solid var(--gold);color:var(--gold)}
 .mcont{max-width:600px}
@@ -340,7 +332,6 @@ body {
 .chip-row{display:flex;gap:7px;margin-top:10px}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--cream-d);background:transparent;font-size:12px;color:var(--slate-m);cursor:pointer;font-family:'Jost',sans-serif;transition:all .15s}
 .chip:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-p)}
-.err-banner{background:#FEE;border:1px solid #F5C6C6;border-radius:var(--r);padding:10px 14px;font-size:13px;color:#C0392B;margin-bottom:12px}
 
 /* SCORECARD */
 .backdrop{position:fixed;inset:0;background:rgba(61,63,92,.55);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
@@ -387,7 +378,7 @@ const FEATS  = [
   { Icon:Download,  title:"Export Sessions",        desc:"Download your full transcript to review or share with a mentor." },
 ];
 const STEPS = [
-  { n:"01", Icon:User,          title:"Create your profile", desc:"Sign up in seconds. Tell us what role you're targeting and your experience level." },
+  { n:"01", Icon:User,          title:"Create your profile", desc:"Sign up in seconds with email or Google. Tell us what role you're targeting." },
   { n:"02", Icon:Brain,         title:"Choose your style",   desc:"Pick from five distinct AI coaching techniques. Each gives you a different interview experience." },
   { n:"03", Icon:MessageSquare, title:"Practice & improve",  desc:"Get real-time feedback, hints, and a scorecard at the end of every session." },
 ];
@@ -404,31 +395,83 @@ const time = () => new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:
 
 /* ── ROOT ────────────────────────────────────────────────────────────────── */
 export default function NousAI() {
-  const [screen,  setScreen]  = useState("landing");
+  const [screen,  setScreen]  = useState("loading");
   const [appView, setAppView] = useState("context");
   const [user,    setUser]    = useState(null);
+
+  /* On mount: handle OAuth redirect token or verify stored token */
+  useEffect(() => {
+    async function init() {
+      const params    = new URLSearchParams(window.location.search);
+      const urlToken  = params.get("token");
+      const authError = params.get("auth_error");
+      window.history.replaceState({}, "", window.location.pathname);
+
+      if (authError) { setScreen("login"); return; }
+
+      const token = urlToken || loadToken();
+      if (!token)  { setScreen("landing"); return; }
+      if (urlToken) saveToken(urlToken);
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error();
+        const profile = await res.json();
+        setUser(profile);
+        setScreen("app");
+      } catch {
+        clearToken();
+        setScreen("landing");
+      }
+    }
+    init();
+  }, []);
+
+  function handleLoginSuccess(profile) {
+    setUser(profile);
+    setScreen("app");
+  }
+
+  function handleLogout() {
+    clearToken();
+    setUser(null);
+    setScreen("landing");
+  }
+
+  if (screen === "loading") {
+    return (
+      <>
+        <style>{CSS}</style>
+        <div className="loading-screen">
+          <div className="big-spinner"/>
+          <p>Loading NOUS AI…</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <style>{CSS}</style>
-      {screen==="landing" && <Landing  go={setScreen}/>}
-      {screen==="login"   && <Login    go={setScreen} setUser={setUser}/>}
-      {screen==="signup"  && <Signup   go={setScreen} setUser={setUser}/>}
-      {screen==="app"     && <App      go={setScreen} user={user} view={appView} setView={setAppView}/>}
+      {screen === "landing" && <Landing go={setScreen} />}
+      {screen === "login"   && <Login   go={setScreen} onSuccess={handleLoginSuccess} />}
+      {screen === "signup"  && <Signup  go={setScreen} onSuccess={handleLoginSuccess} />}
+      {screen === "app"     && <App     go={setScreen} user={user} view={appView} setView={setAppView} onLogout={handleLogout} />}
     </>
   );
 }
 
 /* ── LANDING ─────────────────────────────────────────────────────────────── */
 function Landing({ go }) {
-  const [scrolled, setScrolled]     = useState(false);
-  const [activeSection, setActive]  = useState("");
+  const [scrolled, setScrolled]    = useState(false);
+  const [activeSection, setActive] = useState("");
   const wrapRef  = useRef(null);
   const howRef   = useRef(null);
   const featRef  = useRef(null);
   const testiRef = useRef(null);
 
-  // Use the wrapper div's own scroll event — works in browser AND iframe
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -444,28 +487,15 @@ function Landing({ go }) {
 
   return (
     <div ref={wrapRef} style={{height:"100vh", overflowY:"auto"}}>
-      {/* NAV */}
-      <nav className="land-nav" style={scrolled?{boxShadow:"0 2px 20px rgba(0,0,0,.08)"}:{}}>
+      <nav className="land-nav" style={scrolled ? {boxShadow:"0 2px 20px rgba(0,0,0,.08)"} : {}}>
         <div className="nav-brand">
           <div className="nav-logo"><Brain size={18}/></div>
           <div className="nav-name">NOUS <span>AI</span></div>
         </div>
         <div className="nav-links">
-          <button
-            className={`nav-link ${activeSection==="how"?"active":""}`}
-            onClick={()=>scrollTo(howRef,"how")}>
-            How it works
-          </button>
-          <button
-            className={`nav-link ${activeSection==="feat"?"active":""}`}
-            onClick={()=>scrollTo(featRef,"feat")}>
-            Features
-          </button>
-          <button
-            className={`nav-link ${activeSection==="testi"?"active":""}`}
-            onClick={()=>scrollTo(testiRef,"testi")}>
-            Testimonials
-          </button>
+          <button className={`nav-link ${activeSection==="how"?"active":""}`}  onClick={()=>scrollTo(howRef,"how")}>How it works</button>
+          <button className={`nav-link ${activeSection==="feat"?"active":""}`} onClick={()=>scrollTo(featRef,"feat")}>Features</button>
+          <button className={`nav-link ${activeSection==="testi"?"active":""}`}onClick={()=>scrollTo(testiRef,"testi")}>Testimonials</button>
         </div>
         <div className="nav-ctas">
           <button className="btn btn-ghost btn-sm" onClick={()=>go("login")}>Sign in</button>
@@ -473,7 +503,6 @@ function Landing({ go }) {
         </div>
       </nav>
 
-      {/* HERO */}
       <div className="hero-wrap">
         <div className="hero-orbs">
           <div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/>
@@ -489,9 +518,7 @@ function Landing({ go }) {
           The intelligent interview coach that adapts to <strong>your role, your level, your goals</strong> — and tells you exactly how to improve.
         </p>
         <div className="hero-ctas anim-fade-up d3">
-          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>
-            Start practising free <ArrowRight size={16}/>
-          </button>
+          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>Start practising free <ArrowRight size={16}/></button>
           <button className="btn btn-ghost btn-lg" onClick={()=>go("login")}>Sign in</button>
         </div>
         <div className="hero-scroll" onClick={()=>scrollTo(howRef,"how")}>
@@ -499,7 +526,6 @@ function Landing({ go }) {
         </div>
       </div>
 
-      {/* STATS */}
       <div className="stats-strip">
         {[["10,000+","Interviews practised"],["94%","Users feel more confident"],["5","Coaching techniques"],["4.9★","Average rating"]].map(([v,l])=>(
           <div key={l} className="strip-stat anim-fade-up">
@@ -509,7 +535,6 @@ function Landing({ go }) {
         ))}
       </div>
 
-      {/* HOW IT WORKS */}
       <div ref={howRef} style={{background:"var(--cream)",scrollMarginTop:"68px"}}>
         <div className="section">
           <div className="section-eyebrow">How it works</div>
@@ -528,7 +553,6 @@ function Landing({ go }) {
         </div>
       </div>
 
-      {/* FEATURES */}
       <div ref={featRef} className="features-bg" style={{scrollMarginTop:"68px"}}>
         <div className="feat-inner">
           <div className="section-eyebrow" style={{color:"var(--gold)"}}>Features</div>
@@ -546,7 +570,6 @@ function Landing({ go }) {
         </div>
       </div>
 
-      {/* TESTIMONIALS */}
       <div ref={testiRef} style={{background:"var(--cream)",scrollMarginTop:"68px"}}>
         <div className="section">
           <div className="section-eyebrow">Testimonials</div>
@@ -567,19 +590,15 @@ function Landing({ go }) {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="cta-band">
         <h2 className="cta-h2 anim-fade-up">Ready to ace your next interview?</h2>
         <p className="cta-sub anim-fade-up d1">Join thousands of candidates who practise smarter, not harder.</p>
         <div className="cta-btns anim-fade-up d2">
-          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>
-            Get started — it's free <ArrowRight size={16}/>
-          </button>
+          <button className="btn btn-gold btn-lg" onClick={()=>go("signup")}>Get started — it's free <ArrowRight size={16}/></button>
           <button className="btn btn-ghost-w btn-lg" onClick={()=>go("login")}>Sign in</button>
         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="footer">
         <div className="footer-brand">
           <div className="nav-logo"><Brain size={16}/></div>
@@ -592,21 +611,37 @@ function Landing({ go }) {
 }
 
 /* ── LOGIN ───────────────────────────────────────────────────────────────── */
-function Login({ go, setUser }) {
+function Login({ go, onSuccess }) {
   const [email,   setEmail]   = useState("");
   const [pass,    setPass]    = useState("");
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
+  const [gLoading,setGLoading]= useState(false);
   const [err,     setErr]     = useState("");
 
-  function submit() {
-    if (!email||!pass) { setErr("Please fill in all fields."); return; }
+  async function submit() {
+    if (!email || !pass) { setErr("Please fill in all fields."); return; }
     setErr(""); setLoading(true);
-    setTimeout(() => {
+    try {
+      const res  = await fetch(`${API_BASE}/auth/login`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Login failed.");
+      saveToken(data.token);
+      onSuccess(data.user);
+    } catch(e) {
+      setErr(e.message);
+    } finally {
       setLoading(false);
-      setUser({ name: email.split("@")[0], email });
-      go("app");
-    }, 1200);
+    }
+  }
+
+  function signInWithGoogle() {
+    setGLoading(true);
+    window.location.href = `${API_BASE}/auth/google`;
   }
 
   return (
@@ -619,7 +654,7 @@ function Login({ go, setUser }) {
             <div className="auth-brand-name">NOUS <span>AI</span></div>
           </div>
           <h2 className="auth-pitch-h anim-slide-r d1">Interviews are<br/><em>won in practice.</em></h2>
-          <p className="auth-pitch-p anim-slide-r d2">The intelligent coach that adapts to your goals and tells you exactly how to close the gap between where you are and where you want to be.</p>
+          <p className="auth-pitch-p anim-slide-r d2">The intelligent coach that adapts to your goals and tells you exactly how to close the gap.</p>
           <div className="auth-bullets anim-slide-r d3">
             {["Real-time feedback on every response","5 distinct coaching techniques","Performance scorecard after every session","Technical, behavioral & case study modes"].map(b=>(
               <div key={b} className="auth-bullet">
@@ -629,11 +664,28 @@ function Login({ go, setUser }) {
           </div>
         </div>
       </div>
+
       <div className="auth-right">
         <div className="anim-fade-up">
           <div className="auth-form-title">Welcome back</div>
-          <div className="auth-form-sub">Don't have an account? <span onClick={()=>go("signup")}>Create one free</span></div>
+          <div className="auth-form-sub">
+            Don't have an account? <span onClick={()=>go("signup")}>Create one free</span>
+          </div>
+
+          {/* Google button */}
+          <button className="social-btn" onClick={signInWithGoogle} disabled={gLoading}>
+            {gLoading
+              ? <><div className="spinner" style={{borderTopColor:"var(--slate)",borderColor:"rgba(61,63,92,.2)"}}/>Redirecting…</>
+              : <><GoogleIcon/> Continue with Google</>
+            }
+          </button>
+
+          <div className="divider">
+            <div className="div-line"/><span className="div-txt">or sign in with email</span><div className="div-line"/>
+          </div>
+
           {err && <div className="err-banner">{err}</div>}
+
           <div className="form-group">
             <label className="form-label">Email address</label>
             <div className="form-input-wrap">
@@ -643,6 +695,7 @@ function Login({ go, setUser }) {
                 onKeyDown={e=>e.key==="Enter"&&submit()}/>
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Password</label>
             <div className="form-input-wrap">
@@ -651,16 +704,21 @@ function Login({ go, setUser }) {
                 value={pass} onChange={e=>setPass(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&submit()}/>
               <button className="eye-btn" onClick={()=>setShow(s=>!s)}>
-                {show?<EyeOff size={15}/>:<Eye size={15}/>}
+                {show ? <EyeOff size={15}/> : <Eye size={15}/>}
               </button>
             </div>
           </div>
+
           <button className="submit-btn" onClick={submit} disabled={loading}>
-            {loading?<><div className="spinner"/>Signing in…</>:<>Sign in <ArrowRight size={15}/></>}
+            {loading
+              ? <><div className="spinner"/>Signing in…</>
+              : <>Sign in <ArrowRight size={15}/></>
+            }
           </button>
-          <div className="divider"><div className="div-line"/><span className="div-txt">or continue with</span><div className="div-line"/></div>
-          <button className="social-btn"><GoogleIcon/> Continue with Google</button>
-          <div className="terms-note">By signing in you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.</div>
+
+          <div className="terms-note">
+            By signing in you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.
+          </div>
         </div>
       </div>
     </div>
@@ -668,23 +726,39 @@ function Login({ go, setUser }) {
 }
 
 /* ── SIGNUP ──────────────────────────────────────────────────────────────── */
-function Signup({ go, setUser }) {
+function Signup({ go, onSuccess }) {
   const [name,    setName]    = useState("");
   const [email,   setEmail]   = useState("");
   const [pass,    setPass]    = useState("");
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
+  const [gLoading,setGLoading]= useState(false);
   const [err,     setErr]     = useState("");
 
-  function submit() {
-    if (!name||!email||!pass) { setErr("Please fill in all fields."); return; }
-    if (pass.length<8)        { setErr("Password must be at least 8 characters."); return; }
+  async function submit() {
+    if (!name || !email || !pass) { setErr("Please fill in all fields."); return; }
+    if (pass.length < 8)          { setErr("Password must be at least 8 characters."); return; }
     setErr(""); setLoading(true);
-    setTimeout(() => {
+    try {
+      const res  = await fetch(`${API_BASE}/auth/signup`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ name, email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Sign-up failed.");
+      saveToken(data.token);
+      onSuccess(data.user);
+    } catch(e) {
+      setErr(e.message);
+    } finally {
       setLoading(false);
-      setUser({ name, email });
-      go("app");
-    }, 1400);
+    }
+  }
+
+  function signInWithGoogle() {
+    setGLoading(true);
+    window.location.href = `${API_BASE}/auth/google`;
   }
 
   return (
@@ -707,13 +781,28 @@ function Signup({ go, setUser }) {
           </div>
         </div>
       </div>
+
       <div className="auth-right">
         <div className="anim-fade-up">
           <div className="auth-form-title">Create your account</div>
-          <div className="auth-form-sub">Already have one? <span onClick={()=>go("login")}>Sign in instead</span></div>
+          <div className="auth-form-sub">
+            Already have one? <span onClick={()=>go("login")}>Sign in instead</span>
+          </div>
+
+          {/* Google button */}
+          <button className="social-btn" onClick={signInWithGoogle} disabled={gLoading}>
+            {gLoading
+              ? <><div className="spinner" style={{borderTopColor:"var(--slate)",borderColor:"rgba(61,63,92,.2)"}}/>Redirecting…</>
+              : <><GoogleIcon/> Sign up with Google</>
+            }
+          </button>
+
+          <div className="divider">
+            <div className="div-line"/><span className="div-txt">or sign up with email</span><div className="div-line"/>
+          </div>
+
           {err && <div className="err-banner">{err}</div>}
-          <button className="social-btn" style={{marginBottom:16}}><GoogleIcon/> Sign up with Google</button>
-          <div className="divider"><div className="div-line"/><span className="div-txt">or with email</span><div className="div-line"/></div>
+
           <div className="form-group">
             <label className="form-label">Full name</label>
             <div className="form-input-wrap">
@@ -722,6 +811,7 @@ function Signup({ go, setUser }) {
                 value={name} onChange={e=>setName(e.target.value)}/>
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Email address</label>
             <div className="form-input-wrap">
@@ -730,6 +820,7 @@ function Signup({ go, setUser }) {
                 value={email} onChange={e=>setEmail(e.target.value)}/>
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Password</label>
             <div className="form-input-wrap">
@@ -738,14 +829,21 @@ function Signup({ go, setUser }) {
                 value={pass} onChange={e=>setPass(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&submit()}/>
               <button className="eye-btn" onClick={()=>setShow(s=>!s)}>
-                {show?<EyeOff size={15}/>:<Eye size={15}/>}
+                {show ? <EyeOff size={15}/> : <Eye size={15}/>}
               </button>
             </div>
           </div>
+
           <button className="submit-btn" onClick={submit} disabled={loading}>
-            {loading?<><div className="spinner"/>Creating account…</>:<>Create account <ArrowRight size={15}/></>}
+            {loading
+              ? <><div className="spinner"/>Creating account…</>
+              : <>Create account <ArrowRight size={15}/></>
+            }
           </button>
-          <div className="terms-note">By creating an account you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.</div>
+
+          <div className="terms-note">
+            By creating an account you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.
+          </div>
         </div>
       </div>
     </div>
@@ -753,11 +851,10 @@ function Signup({ go, setUser }) {
 }
 
 /* ── APP ─────────────────────────────────────────────────────────────────── */
-function App({ go, user, view, setView }) {
+function App({ go, user, view, setView, onLogout }) {
   const [tech,      setTech]      = useState("role");
   const [mode,      setMode]      = useState(MODES[0]);
   const [level,     setLevel]     = useState("Senior");
-  const [apiKey,    setApiKey]    = useState("");
   const [ctx,       setCtx]       = useState("");
   const [msgs,      setMsgs]      = useState([]);
   const [inp,       setInp]       = useState("");
@@ -796,12 +893,13 @@ function App({ go, user, view, setView }) {
     try {
       const res = await fetch(`${API_BASE}/chat`, {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ api_key:apiKey, messages:[], context:ctx, mode, level, technique:tech }),
+        headers:{"Content-Type":"application/json", ...authHeaders()},
+        body: JSON.stringify({ messages:[], context:ctx, mode, level, technique:tech }),
       });
+      if (res.status===401) { onLogout(); return; }
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail||"API error");
-      setMsgs([{role:"assistant", content:data.message, time:time(), tags:[]}]);
+      setMsgs([{role:"assistant",content:data.message,time:time(),tags:[]}]);
       setTotalCost(c=>c+data.cost);
       setTotalTok(t=>t+data.tokens.input+data.tokens.output);
     } catch(e) {
@@ -814,7 +912,7 @@ function App({ go, user, view, setView }) {
 
   async function send() {
     if (!inp.trim()||typing) return;
-    const userMsg = {role:"user", content:inp, time:time(), tags:[]};
+    const userMsg = {role:"user",content:inp,time:time(),tags:[]};
     const newMsgs = [...msgs, userMsg];
     setMsgs(newMsgs);
     setInp("");
@@ -823,13 +921,13 @@ function App({ go, user, view, setView }) {
     try {
       const res = await fetch(`${API_BASE}/chat`, {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json",...authHeaders()},
         body: JSON.stringify({
-          api_key:apiKey,
-          messages: newMsgs.map(m=>({role:m.role, content:m.content})),
+          messages: newMsgs.map(m=>({role:m.role,content:m.content})),
           context:ctx, mode, level, technique:tech,
         }),
       });
+      if (res.status===401) { onLogout(); return; }
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail||"API error");
       const content = data.message;
@@ -852,13 +950,10 @@ function App({ go, user, view, setView }) {
     try {
       const res = await fetch(`${API_BASE}/scorecard`, {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          api_key:apiKey,
-          messages: msgs.map(m=>({role:m.role,content:m.content})),
-          mode, level,
-        }),
+        headers:{"Content-Type":"application/json",...authHeaders()},
+        body: JSON.stringify({ messages:msgs.map(m=>({role:m.role,content:m.content})), mode, level }),
       });
+      if (res.status===401) { onLogout(); return; }
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail||"Scorecard error");
       setScoreData(data);
@@ -887,6 +982,7 @@ function App({ go, user, view, setView }) {
   }
 
   function onKey(e) { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} }
+
   const initials = user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()||"U";
 
   return (
@@ -896,20 +992,6 @@ function App({ go, user, view, setView }) {
         <div className="sb-brand">
           <div className="sb-eyebrow">NOUS AI</div>
           <div className="sb-title">Interview<br/><span>Coach</span></div>
-        </div>
-
-        <div className="sb-sec">
-          <div className="sb-lbl"><Key size={10}/> OpenAI Key</div>
-          <div style={{position:"relative"}}>
-            <input
-              style={{width:"100%",background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:4,color:"white",fontFamily:"'Jost Mono',monospace",fontSize:12,padding:"10px 32px 10px 12px",outline:"none"}}
-              type="password" placeholder="sk-proj-..."
-              value={apiKey} onChange={e=>setApiKey(e.target.value)}/>
-            <div style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",width:8,height:8,borderRadius:"50%",background:apiKey?"var(--ok)":"var(--slate-l)"}}/>
-          </div>
-          {apiKey
-            ? <span className="pill ok"><CheckCircle size={10}/>Connected</span>
-            : <span className="pill no"><Circle size={10}/>Required</span>}
         </div>
 
         <div className="sb-sec">
@@ -969,7 +1051,12 @@ function App({ go, user, view, setView }) {
 
         <div className="sb-foot">
           <div className="sb-user">
-            <div className="sb-av">{initials}</div>
+            <div className="sb-av">
+              {user?.picture
+                ? <img src={user.picture} alt={user.name} referrerPolicy="no-referrer"/>
+                : <div className="sb-av-fb">{initials}</div>
+              }
+            </div>
             <div>
               <div className="sb-uname">{user?.name||"User"}</div>
               <div className="sb-uemail">{user?.email||""}</div>
@@ -998,7 +1085,7 @@ function App({ go, user, view, setView }) {
               <button className="btn btn-ghost btn-sm" onClick={exportChat}><Download size={13}/>Export</button>
               <button className="btn btn-ghost btn-sm" onClick={resetSession}><RotateCcw size={13}/>New Session</button>
             </>}
-            <button className="btn btn-ghost btn-sm" onClick={()=>go("landing")} title="Sign out">
+            <button className="btn btn-ghost btn-sm" onClick={onLogout} title="Sign out">
               <LogOut size={13}/>
             </button>
           </div>
@@ -1035,16 +1122,11 @@ function App({ go, user, view, setView }) {
               <div className="ctx-foot">
                 <span className="char-ct">{ctx.length} / 2000</span>
                 <button className="btn btn-gold"
-                  style={{opacity:(ctx.trim()&&apiKey)?1:.45}}
+                  style={{opacity:ctx.trim()?1:.45}}
                   onClick={startInterview}>
                   Start Interview <ArrowRight size={14}/>
                 </button>
               </div>
-              {!apiKey&&(
-                <p style={{fontSize:12,color:"var(--gold)",marginTop:8}}>
-                  ⚠ Enter your OpenAI API key in the sidebar to begin.
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -1073,9 +1155,14 @@ function App({ go, user, view, setView }) {
             <div className="chat" ref={chatRef}>
               {msgs.map((m,i)=>(
                 <div key={i} className={`mrow ${m.role==="user"?"user":""}`}>
-                  <div className={`mav ${m.role==="user"?"usr":"ai"}`}><User size={14}/></div>
+                  <div className={`mav ${m.role==="user"?"usr":"ai"}`}>
+                    {m.role==="user" && user?.picture
+                      ? <img src={user.picture} alt="" referrerPolicy="no-referrer" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}}/>
+                      : <User size={14}/>
+                    }
+                  </div>
                   <div className="mcont">
-                    <div className="msend">{m.role==="user"?"You":"Sarah Chen"} · {m.time}</div>
+                    <div className="msend">{m.role==="user"?(user?.name?.split(" ")[0]||"You"):"Sarah Chen"} · {m.time}</div>
                     <div className={`bubble ${m.role==="user"?"user":"ai"}`}>{nl(m.content)}</div>
                     {m.tags?.length>0&&(
                       <div className="ftags">
