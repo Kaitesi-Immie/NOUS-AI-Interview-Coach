@@ -1,0 +1,5 @@
+[phases.install]
+cmds = ["pip install fastapi uvicorn openai pydantic python-dotenv"]
+
+[start]
+cmd = "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
